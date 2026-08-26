@@ -1,0 +1,12 @@
+{
+  "name": "spike-prime-project",
+  "hub": {
+    "connection": "usb"
+  },
+  "ports": {
+    "A": "large-motor",
+    "B": "large-motor",
+    "C": "color-sensor",
+    "D": "distance-sensor"
+  }
+}

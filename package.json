@@ -1,0 +1,93 @@
+{
+  "name": "spike-prime-c",
+  "displayName": "SPIKE Prime C",
+  "description": "Beginner-friendly VS Code workflow for building and running SPIKE Prime C projects.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.88.0"
+  },
+  "categories": [
+    "Education",
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:spikePrimeC.newProject",
+    "onCommand:spikePrimeC.build",
+    "onCommand:spikePrimeC.upload",
+    "onCommand:spikePrimeC.buildAndRun",
+    "onCommand:spikePrimeC.selectHub",
+    "onView:spikePrimeC.hub",
+    "onView:spikePrimeC.examples"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "spikePrimeC.newProject",
+        "title": "SPIKE Prime: New Project"
+      },
+      {
+        "command": "spikePrimeC.build",
+        "title": "SPIKE Prime: Build"
+      },
+      {
+        "command": "spikePrimeC.upload",
+        "title": "SPIKE Prime: Upload"
+      },
+      {
+        "command": "spikePrimeC.buildAndRun",
+        "title": "SPIKE Prime: Build and Run"
+      },
+      {
+        "command": "spikePrimeC.selectHub",
+        "title": "SPIKE Prime: Select Hub"
+      }
+    ],
+    "configuration": {
+      "title": "SPIKE Prime C",
+      "properties": {
+        "spikePrimeC.makeCommand": {
+          "type": "string",
+          "default": "make",
+          "description": "Command used to build SPIKE Prime C projects."
+        },
+        "spikePrimeC.uploadCommand": {
+          "type": "string",
+          "default": "spike-upload",
+          "description": "Command used to upload compiled firmware to the SPIKE Prime Hub."
+        },
+        "spikePrimeC.outputFile": {
+          "type": "string",
+          "default": "build/output.bin",
+          "description": "Firmware file passed to the upload command."
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "spikePrimeC",
+          "title": "SPIKE Prime",
+          "icon": "media/spike.svg"
+        }
+      ]
+    },
+    "views": {
+      "spikePrimeC": [
+        {
+          "id": "spikePrimeC.hub",
+          "name": "Hub"
+        },
+        {
+          "id": "spikePrimeC.examples",
+          "name": "Examples"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "check": "node --check extension.js"
+  },
+  "devDependencies": {}
+}
