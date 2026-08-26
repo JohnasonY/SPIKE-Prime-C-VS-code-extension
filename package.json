@@ -17,6 +17,8 @@
     "onCommand:spikePrimeC.upload",
     "onCommand:spikePrimeC.buildAndRun",
     "onCommand:spikePrimeC.selectHub",
+    "onCommand:spikePrimeC.configureSpikeRt",
+    "onCommand:spikePrimeC.openSpikeRtBuild",
     "onView:spikePrimeC.hub",
     "onView:spikePrimeC.examples"
   ],
@@ -42,6 +44,14 @@
       {
         "command": "spikePrimeC.selectHub",
         "title": "SPIKE Prime: Select Hub"
+      },
+      {
+        "command": "spikePrimeC.configureSpikeRt",
+        "title": "SPIKE Prime: Configure SPIKE-RT Tools"
+      },
+      {
+        "command": "spikePrimeC.openSpikeRtBuild",
+        "title": "SPIKE Prime: Open SPIKE-RT Build Folder"
       }
     ],
     "configuration": {
@@ -50,17 +60,32 @@
         "spikePrimeC.makeCommand": {
           "type": "string",
           "default": "make",
-          "description": "Command used to build SPIKE Prime C projects."
+          "description": "Shell command used to build SPIKE Prime C projects. Supports ${workspaceFolder}."
         },
         "spikePrimeC.uploadCommand": {
           "type": "string",
-          "default": "spike-upload",
-          "description": "Command used to upload compiled firmware to the SPIKE Prime Hub."
+          "default": "spike-upload ${outputFile}",
+          "description": "Shell command used to upload compiled firmware to the SPIKE Prime Hub. Supports ${workspaceFolder} and ${outputFile}."
         },
         "spikePrimeC.outputFile": {
           "type": "string",
           "default": "build/output.bin",
-          "description": "Firmware file passed to the upload command."
+          "description": "Firmware file used by upload commands."
+        },
+        "spikePrimeC.uploadRunsInTerminal": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run upload in a VS Code terminal so USB flashing tools and sudo prompts can interact with the user."
+        },
+        "spikePrimeC.showDfuInstructions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show DFU-mode instructions before uploading to the SPIKE Prime Hub."
+        },
+        "spikePrimeC.spikeRtRoot": {
+          "type": "string",
+          "default": "/Users/jax/spike-rt",
+          "description": "Path to the local SPIKE-RT checkout."
         }
       }
     },

@@ -41,6 +41,8 @@ function activate(context) {
     vscode.commands.registerCommand("spikePrimeC.upload", upload),
     vscode.commands.registerCommand("spikePrimeC.buildAndRun", buildAndRun),
     vscode.commands.registerCommand("spikePrimeC.selectHub", selectHub),
+    vscode.commands.registerCommand("spikePrimeC.configureSpikeRt", configureSpikeRt),
+    vscode.commands.registerCommand("spikePrimeC.openSpikeRtBuild", openSpikeRtBuild),
     vscode.window.registerTreeDataProvider("spikePrimeC.hub", new StaticTreeProvider(getHubItems)),
     vscode.window.registerTreeDataProvider("spikePrimeC.examples", new StaticTreeProvider(getExampleItems))
   );
@@ -92,7 +94,7 @@ async function build() {
   }
 
   const makeCommand = getConfig("makeCommand");
-  return runCommand(makeCommand, [], cwd, "Build complete.", "Build failed.");
+  return runCommand(makeCommand, cwd, "Build complete.", "Build failed.");
 }
 
 async function upload() {
@@ -102,8 +104,26 @@ async function upload() {
   }
 
   const uploadCommand = getConfig("uploadCommand");
-  const outputFile = getConfig("outputFile");
-  return runCommand(uploadCommand, [outputFile], cwd, "Upload complete.", "Upload failed.");
+  const command = expandCommand(uploadCommand, cwd);
+
+  if (getConfig("showDfuInstructions")) {
+    const choice = await vscode.window.showWarningMessage(
+      "Put the SPIKE Prime Hub in DFU mode: turn it off, hold the Bluetooth button, plug in USB, and keep holding until the light flashes.",
+      { modal: true },
+      "Upload Now"
+    );
+
+    if (choice !== "Upload Now") {
+      return false;
+    }
+  }
+
+  if (getConfig("uploadRunsInTerminal")) {
+    runCommandInTerminal(command, cwd);
+    return true;
+  }
+
+  return runCommand(command, cwd, "Upload complete.", "Upload failed.");
 }
 
 async function buildAndRun() {
@@ -140,14 +160,92 @@ async function selectHub() {
   vscode.window.showInformationMessage(`Selected ${selected.label}.`);
 }
 
-function runCommand(command, args, cwd, successMessage, failureMessage) {
+async function configureSpikeRt() {
+  const selected = await vscode.window.showQuickPick(
+    [
+      {
+        label: "macOS + Docker SPIKE-RT",
+        description: "Build in Docker and upload from the SPIKE-RT build directory with deploy-dfu.sh"
+      },
+      {
+        label: "Simple local make",
+        description: "Use make for build and spike-upload for upload"
+      }
+    ],
+    {
+      title: "Configure SPIKE-RT Tools"
+    }
+  );
+
+  if (!selected) {
+    return;
+  }
+
+  const config = vscode.workspace.getConfiguration("spikePrimeC");
+
+  if (selected.label === "macOS + Docker SPIKE-RT") {
+    const spikeRtRoot = getConfig("spikeRtRoot");
+    await config.update("makeCommand", `docker run --rm --platform linux/amd64 -v ${shellQuote(`${spikeRtRoot}:${spikeRtRoot}`)} -w "$(pwd)" ghcr.io/spike-rt/spike-rt:rich make`, vscode.ConfigurationTarget.Workspace);
+    await config.update("uploadCommand", "PYTHON3=../../tools/python/bin/python3 sudo ../../scripts/deploy-dfu.sh asp.bin", vscode.ConfigurationTarget.Workspace);
+    await config.update("outputFile", "asp.bin", vscode.ConfigurationTarget.Workspace);
+    await config.update("uploadRunsInTerminal", true, vscode.ConfigurationTarget.Workspace);
+    await config.update("showDfuInstructions", true, vscode.ConfigurationTarget.Workspace);
+  } else {
+    await config.update("makeCommand", "make", vscode.ConfigurationTarget.Workspace);
+    await config.update("uploadCommand", "spike-upload ${outputFile}", vscode.ConfigurationTarget.Workspace);
+    await config.update("outputFile", "build/output.bin", vscode.ConfigurationTarget.Workspace);
+    await config.update("uploadRunsInTerminal", true, vscode.ConfigurationTarget.Workspace);
+    await config.update("showDfuInstructions", false, vscode.ConfigurationTarget.Workspace);
+  }
+
+  vscode.window.showInformationMessage(`Configured ${selected.label}.`);
+}
+
+async function openSpikeRtBuild() {
+  const spikeRtRoot = getConfig("spikeRtRoot");
+  const buildRoot = path.join(spikeRtRoot, "build");
+
+  let entries;
+  try {
+    entries = await fs.readdir(buildRoot, { withFileTypes: true });
+  } catch (error) {
+    showError(`Could not read SPIKE-RT build folder at ${buildRoot}.`, error);
+    return;
+  }
+
+  const builds = entries
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith("obj-primehub_") && entry.name !== "obj-primehub_kernel")
+    .map((entry) => ({
+      label: entry.name.replace("obj-primehub_", ""),
+      description: path.join(buildRoot, entry.name),
+      path: path.join(buildRoot, entry.name)
+    }));
+
+  if (builds.length === 0) {
+    vscode.window.showWarningMessage(`No SPIKE-RT application build folders found in ${buildRoot}.`);
+    return;
+  }
+
+  const selected = await vscode.window.showQuickPick(builds, {
+    title: "Open SPIKE-RT Build Folder"
+  });
+
+  if (!selected) {
+    return;
+  }
+
+  await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(selected.path), false);
+}
+
+function runCommand(command, cwd, successMessage, failureMessage) {
   return new Promise((resolve) => {
+    const expandedCommand = expandCommand(command, cwd);
     output.clear();
     output.show(true);
-    output.appendLine(`$ ${[command, ...args].join(" ")}`);
+    output.appendLine(`$ ${expandedCommand}`);
     output.appendLine("");
 
-    const child = spawn(command, args, {
+    const child = spawn(expandedCommand, {
       cwd,
       shell: true
     });
@@ -188,6 +286,32 @@ function runCommand(command, args, cwd, successMessage, failureMessage) {
       resolve(false);
     });
   });
+}
+
+function runCommandInTerminal(command, cwd) {
+  const terminal = vscode.window.createTerminal({
+    name: "SPIKE Prime Upload",
+    cwd
+  });
+
+  terminal.show();
+  terminal.sendText(command);
+}
+
+function expandCommand(command, workspaceFolder) {
+  const outputFile = getConfig("outputFile");
+  return String(command)
+    .replaceAll("${workspaceFolder}", shellQuote(workspaceFolder))
+    .replaceAll("${outputFile}", shellQuote(outputFile));
+}
+
+function shellQuote(value) {
+  const text = String(value);
+  if (/^[A-Za-z0-9_./:-]+$/.test(text)) {
+    return text;
+  }
+
+  return `'${text.replaceAll("'", "'\\''")}'`;
 }
 
 function friendlyHints(text) {

@@ -6,7 +6,7 @@ APP_NAME := spike_app
 BUILD_DIR := build
 OUTPUT := $(BUILD_DIR)/output.bin
 
-.PHONY: all clean upload
+.PHONY: all clean upload deploy-dfu
 
 all: $(OUTPUT)
 
@@ -18,6 +18,10 @@ $(OUTPUT): main.c
 
 upload: $(OUTPUT)
 	spike-upload $(OUTPUT)
+
+deploy-dfu:
+	@echo "This starter project is not a real SPIKE-RT build directory yet."
+	@echo "For real DFU upload, open build/obj-primehub_<appname> inside a SPIKE-RT checkout."
 
 clean:
 	rm -rf $(BUILD_DIR)
