@@ -2,7 +2,7 @@
 
 int main(void)
 {
-    motor_run(PORT_C, 50);
+    motor_run(PORT_C, 60);
     wait(2000);
     motor_stop(PORT_C);
 
