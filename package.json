@@ -64,12 +64,12 @@
         },
         "spikePrimeC.uploadCommand": {
           "type": "string",
-          "default": "spike-upload ${outputFile}",
+          "default": "make deploy-dfu",
           "description": "Shell command used to upload compiled firmware to the SPIKE Prime Hub. Supports ${workspaceFolder} and ${outputFile}."
         },
         "spikePrimeC.outputFile": {
           "type": "string",
-          "default": "build/output.bin",
+          "default": ".spike-rt/build/obj-primehub_main/asp.bin",
           "description": "Firmware file used by upload commands."
         },
         "spikePrimeC.uploadRunsInTerminal": {

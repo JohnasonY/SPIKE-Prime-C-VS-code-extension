@@ -1,10 +1,25 @@
-#include <spike.h>
+#include <kernel.h>
+#include <t_syslog.h>
+#include "kernel_cfg.h"
+#include "spike/hub/display.h"
+#include "spike/hub/light.h"
 
-int main(void)
+void main_task(intptr_t exinf)
 {
-    motor_run(PORT_C, 60);
-    wait(2000);
-    motor_stop(PORT_C);
+    char letter = 'A';
 
-    return 0;
+    syslog(LOG_NOTICE, "SPIKE Prime C app started.");
+
+    while (1) {
+        hub_display_off();
+        hub_display_char(letter);
+        hub_light_on_color(PBIO_COLOR_GREEN);
+
+        letter++;
+        if (letter > 'Z') {
+            letter = 'A';
+        }
+
+        dly_tsk(1000 * 1000);
+    }
 }
