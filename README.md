@@ -16,6 +16,31 @@ Beginner-friendly VS Code commands for creating, building, uploading, and runnin
 
 This scaffold creates a JavaScript VS Code extension and a starter C project template. The generated project can build directly against a local SPIKE-RT checkout with `make`.
 
+## Second milestone
+
+The next milestone is a SPIKE-RT-native project flow:
+
+1. Run `SPIKE Prime: New/Open SPIKE-RT App`.
+2. Choose an app name, for example `line_follower`.
+3. The extension creates or registers the app inside the local SPIKE-RT checkout.
+4. The extension configures the real SPIKE-RT build folder:
+
+   ```text
+   /Users/jax/spike-rt/build/obj-primehub_line_follower
+   ```
+
+5. VS Code opens that generated build folder.
+6. Edit, build, upload, and run from the SPIKE-RT build folder.
+
+This flow is less tidy than a standalone project folder, but it is closer to SPIKE-RT's documented build model. It should also reuse shared SPIKE-RT build artifacts more naturally:
+
+```text
+/Users/jax/spike-rt/build/obj-primehub_kernel
+/Users/jax/spike-rt/build/obj-primehub_pybricks
+```
+
+The first build may still take several minutes because SPIKE-RT has to compile Pybricks, the kernel, TECS-generated sources, and the app firmware. Later builds, and additional apps that reuse the same SPIKE-RT build cache, should usually be faster.
+
 ## Local development
 
 1. Open this folder in VS Code.
