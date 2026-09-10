@@ -1,7 +1,7 @@
 {
   "name": "spike-prime-c",
   "displayName": "SPIKE Prime C",
-  "description": "Beginner-friendly VS Code workflow for building and running SPIKE Prime C projects.",
+  "description": "VS Code workflow for building and running SPIKE Prime C projects.",
   "version": "0.0.1",
   "publisher": "JiaxingRong",
   "engines": {
